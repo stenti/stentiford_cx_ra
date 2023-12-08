@@ -1,0 +1,17 @@
+Create conda environment from yml file
+
+conda env create -f environment.yml
+conda activate cx_ra_rn
+
+
+Install pyGeNN within the conda environment from instructions:
+
+https://genn-team.github.io/genn/documentation/4/html/d8/d99/Installation.html
+
+follow Obtaining a Git snapshot and Installing PyGeNN sections
+
+
+
+
+
+
