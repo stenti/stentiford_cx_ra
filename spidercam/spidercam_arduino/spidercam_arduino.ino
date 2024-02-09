@@ -24,20 +24,15 @@ float step_delay = 200 ;//500; // higher = slower
 float origin[3] = {frameX/2,frameY/2,0};
 float target[3] = {frameX/2,frameY/2,0};
 
-// int motors[4][2] = {{2,3},  //motor 0
-//                     {4,5},  //motor 1
-//                     {6,7},  //motor 2
-//                     {8,9}}; //motor 3
-
-int motors[4][2] = {{6,7},  //motor 0
-                    {8,9},  //motor 1
+int motors[4][2] = {{6,7},    //motor 0
+                    {8,9},    //motor 1
                     {10,11},  //motor 2
                     {12,13}}; //motor 3
 
 float motor_coords[4][3] = {{0,0,frameZ},
-                    {frameX,0,frameZ},
-                    {frameX,frameY,frameZ},
-                    {0,frameY,frameZ}};
+                            {frameX,0,frameZ},
+                            {frameX,frameY,frameZ},
+                            {0,frameY,frameZ}};
                     
 int wireLength[4];
 int target_wireLength[4];
@@ -50,7 +45,7 @@ float getHypotenuse(float A, float B, float C){
 void getWireLength(float pos[]){
   for (int i = 0; i < 4; i++) {
     target_wireLength[i] = (int) round(getHypotenuse(motor_coords[i][0]-pos[0],motor_coords[i][1]-pos[1],motor_coords[i][2]-pos[2]));
-    Serial.println(target_wireLength[i]* mmPerStep);
+    // Serial.println(target_wireLength[i]* mmPerStep);
   }
 }
 
@@ -105,7 +100,6 @@ void move_steps(int motor, int steps){
     digitalWrite(motors[motor][0], LOW);
   }
   for (int i = 0; i < abs(steps); i++) {
-    // These four lines result in 1 step:
     digitalWrite(motors[motor][1], HIGH);
     delayMicroseconds(step_delay);
     digitalWrite(motors[motor][1], LOW);
@@ -119,28 +113,9 @@ float circle(float r, float t){
   target[2] = origin[2];
 }
 
-float spiral(float r, float t){
-  target[0] = r*cos(t) + origin[0];
-  target[1] = r*sin(t) + origin[1];
-  target[2] = (10/mmPerStep)*t + origin[2];
-}
-
-float daisy(float r, float t){
-  target[0] = r*(sin(2*t)*cos(t)) + origin[0];
-  target[1] = r*(sin(2*t)*sin(t)) + origin[1];
-  target[2] = (10/mmPerStep)*t + origin[2];
-}
-
-// float eight(float r, float t){
-//   target[0] = r*sin(2*t) + origin[0];
-//   target[1] = r*cos(t) + origin[1];
-//   target[2] = origin[2];
-// }
-
-float eight(float r, float t){
-  target[0] = r*(0.3*sin(2*t)+cos(t)) + origin[0];
-  target[1] = r*cos(t) + origin[1];
-  target[2] = origin[2];
+void gohome(){
+  goingHome = true;
+  moveToTarget(origin);
 }
 
 void setup() {
@@ -161,7 +136,7 @@ void setup() {
 
   getWireLength(origin);
   for(int i=0; i<4; i++){
-    wireLength[i] = 815  / mmPerStep ; //target_wireLength[i];
+    wireLength[i] = 815  / mmPerStep ; //measured wire length
   }
 
   attachInterrupt(digitalPinToInterrupt(BUTTON_HOME), gohome, RISING);
@@ -204,11 +179,11 @@ void loop() {
   }
 
 
-if (count == 0){
-  getWireLength(origin);
-  moveToTarget(origin);
-  count++;
-}
+  if (count == 0){
+    getWireLength(origin);
+    moveToTarget(origin);
+    count++;
+  }
 
   if (goState != lastGoState){
     lastGoState = goState;
@@ -223,7 +198,6 @@ if (count == 0){
         moveToTarget(target);
       }
       delay(1000);
-      // moveToTarget(origin);
       // MEDIUM CIRCLE
       for (int i = 0; i <= 360*3; i++) {
         float t = i*(pi/180);
@@ -231,7 +205,6 @@ if (count == 0){
         moveToTarget(target);
       }
       delay(1000);
-      // moveToTarget(origin);
       // LARGE CIRCLE
       for (int i = 0; i <= 360*3; i++) {
         float t = i*(pi/180);
@@ -239,7 +212,6 @@ if (count == 0){
         moveToTarget(target);
       }
       delay(1000);
-      // moveToTarget(origin);
       // VERY LARGE CIRCLE
       for (int i = 0; i <= 360*3; i++) {
         float t = i*(pi/180);
@@ -251,10 +223,5 @@ if (count == 0){
     }
   }
 
-}
-
-void gohome(){
-  goingHome = true;
-  moveToTarget(origin);
 }
 

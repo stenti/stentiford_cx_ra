@@ -19,10 +19,12 @@ fpath_rotate = ['rotation/1_3rev_static','rotation/2_3rev_static','rotation/4_3r
                 'rotation/15_3rev_static','rotation/16_3rev_static','rotation/17_3rev_static','rotation/18_3rev_static','rotation/19_3rev_static','rotation/20_3rev_static',
                 'rotation/21_3rev_static','rotation/22_3rev_static','rotation/23_3rev_static','rotation/24_3rev_static','rotation/25_3rev_static']
 
+fpath_simple = ['simple_stim/bar_stim_static','simple_stim/triangles_com_static','simple_stim/triangles_static']
+
 
 allfiles = fpath_rotate
-lbl = '_super_static'
-learning = 'off'
+lbl = 'rotation'
+learning = 'on'
 plot_correlations = False
 plot_figures = True
 
@@ -33,7 +35,7 @@ speed = {'0':.13,'50':.074,'100':.074,'150':.074,'200':.074}
 n_exp = 1 #20
 shift = 22 # pixels approx degrees
 n_shift = 1 #16
-performance = np.zeros((n_exp,n_shift,len(allfiles)))
+performance = np.zeros((n_exp,n_shift,len(allfiles),3))
 spike_counts = np.zeros((len(allfiles),5))
 correllations = np.zeros((len(allfiles),2))
 bump = {}
@@ -88,8 +90,12 @@ for exp in range(n_exp):
 
             init = 1000 # ms
             t_single_frame = 1000/fps # ms
-            sim_len = int(frames['sim_len']) + init     #ms
-            t_1rev = frames['sim_len']//3               # ms in 1 revolution
+            if 'sim_len' in frames :
+                sim_len = int(frames['sim_len'])
+            else:
+                sim_len = int(t_single_frame * frames['n_frames']) # ms
+            t_1rev = sim_len//3               # ms in 1 revolution
+            sim_len = sim_len + init     #ms
             n_1rev = int(t_1rev//t_single_frame)        # number of frames in 1 revolution
             r_single_frame = 360/n_1rev                 # rotation in single frame
 
@@ -427,43 +433,10 @@ for exp in range(n_exp):
             if np.isnan(np.subtract(gt[(n_1rev*2):],med_cell[(n_1rev*2):])).sum() > 500:
                 test_RMSE = np.nan
             print(f'test_RMSE = {test_RMSE}')
-            performance[exp,sh,count] = test_RMSE
+            performance[exp,sh,count,2] = test_RMSE
+
 
             if plot_figures:
-                fig, axes = plt.subplots(3, sharex=True, figsize=(6, 5))
-                # fig.suptitle(fname)
-                axes[1].scatter(EPG_spike_times, EPG_spike_ids, s=1, label=f'EPG')
-                axes[0].scatter(R2_spike_times, R2_spike_ids , s=1, label=f'R2', c = 'Gold')
-                axes[0].scatter(R4_spike_times, R4_spike_ids + n_R2, s=1, label=f'R4', c = 'Orange')
-                axes[2].plot(med_tms,gt*22.5, c = 'Black', label='GT')
-                axes[2].plot(med_tms,(med_cell*22.5), label='estimate')
-
-                # bump[exp][sh][count] = med_cell*22.5
-
-                axes[0].fill_between([init,tm_in[(n_1rev*2)]], -1, n_R2 + n_R4 +1 ,color='green', alpha=0.1)
-                axes[1].fill_between([init,tm_in[(n_1rev*2)]], -1, n_EPG +1 ,color='green', alpha=0.1)
-
-                # Label axes
-                axes[0].set_ylabel("Ring Neuron")
-                axes[1].set_ylabel("EPG neuron")
-                axes[2].set_ylabel("Heading Estimate (deg)")
-                axes[2].set_xlabel("Time (ms)")
-                axes[1].set_yticks([0,15])
-                axes[0].set_yticks([0,41,67])
-                axes[2].set_yticks([0,360,720,1080])
-                axes[0].set_ylim([-1,n_R2 + n_R4 +1])
-                axes[1].set_ylim([-1,16])
-                axes[2].set_ylim([0,1080])
-                axes[0].legend(loc = 'upper left')
-                axes[1].legend(loc = 'upper left')
-                axes[2].legend(loc = 'upper left')
-
-                plt.xlim([0,sim_len])
-
-                plt.savefig(f'results/{fname}', bbox_inches='tight')
-                plt.close(fig)
-
-
                 fig = plt.figure(figsize=(6, 4))
                 fig.suptitle(fname)
                 gs = fig.add_gridspec(3,1)
@@ -482,29 +455,7 @@ for exp in range(n_exp):
                 fig.colorbar(im1, ax=ax1)
                 fig.colorbar(im2, ax=ax2)
                 # fig.colorbar(im3, ax=axes[2])
-                plt.savefig(f'results/{fname}_activations', bbox_inches='tight')
-                plt.close(fig)
-
-                fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(3,3))
-                # fig.suptitle(fname)
-                ax1.imshow(np.vstack([R2_EPG_g[0,:],R4_EPG_g[0,:]]), vmin=-wMin, vmax=0.01,aspect='auto',)
-                ax1.set_ylabel("Ring neurons")
-                ax1.set_xlabel("EPG")
-                ax1.set_title('Initial')
-                ax2.imshow(np.vstack([R2_EPG_g[1,:],R4_EPG_g[1,:]]), vmin=-wMin, vmax=0.01,aspect='auto',)
-                ax2.set_xlabel("EPG")
-                ax2.set_title('1 rev')            
-                img = ax3.imshow(np.vstack([R2_EPG_g[2,:],R4_EPG_g[2,:]]), vmin=-wMin, vmax=0.01, aspect='auto',)
-                ax3.set_xlabel("EPG")
-                ax3.set_title('2 rev')
-                fig.colorbar(img, ax=ax3)
-                ax1.set_yticks([0,41,67])
-                ax2.set_yticks([])
-                ax3.set_yticks([])
-                ax1.set_xticks([0,15])
-                ax2.set_xticks([0,15])
-                ax3.set_xticks([0,15])
-                # plt.savefig(f'results/{fname}_weights', bbox_inches='tight')
+                plt.savefig(f'results/{fpath}_activations', bbox_inches='tight')
                 plt.close(fig)
 
                 # PAPER FIGURE B
@@ -564,7 +515,7 @@ for exp in range(n_exp):
                 ax4.set_xticks([0,15])
                 ax5.set_xticks([0,15])
 
-                plt.savefig(f'results/{fname}_{learning}.png', bbox_inches='tight')
+                plt.savefig(f'results/{fpath}_{learning}.png', bbox_inches='tight')
                 plt.close(fig)
 
 
@@ -586,7 +537,7 @@ for exp in range(n_exp):
                 ax.set_ylabel('Angle (deg)')
                 ax.set_xlabel('Angle (deg)')
                 plt.colorbar(im, ax = ax)
-                plt.savefig(f'results/{fname}_R_autocorrelation', bbox_inches='tight')
+                plt.savefig(f'results/{fpath}_R_autocorrelation', bbox_inches='tight')
                 plt.close(fig)
 
 
@@ -602,7 +553,7 @@ for exp in range(n_exp):
                 ax.set_ylabel('Angle (deg)')
                 ax.set_xlabel('Angle (deg)')
                 plt.colorbar(im, ax = ax)
-                plt.savefig(f'results/{fname}_vid_autocorrelation', bbox_inches='tight')
+                plt.savefig(f'results/{fpath}_vid_autocorrelation', bbox_inches='tight')
                 plt.close(fig)
 
                 correllations[count,0] = np.mean(a_cor)
@@ -632,8 +583,8 @@ for exp in range(n_exp):
 
 
 
-        np.save(f'results/performance_{n_exp}_shifting_{n_shift}_learn{learning}_{lbl}',performance)
+        np.save(f'results/{lbl}_{n_exp}_shifting_{n_shift}_learn{learning}',performance)
 
 if plot_correlations:
-    np.save(f'results/spike_counts',spike_counts)
-    np.save(f'results/correlations',correllations)
+    np.save(f'results/{lbl}_spike_counts',spike_counts)
+    np.save(f'results/{lbl}_correlations',correllations)
