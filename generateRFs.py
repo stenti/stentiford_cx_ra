@@ -162,13 +162,14 @@ def getCombinedRFs(img_size,gridRFs, W):
         combRFs[k] = (rf)
     return combRFs
 
+
 def getActivations (frames, shift = 0): 
     n_frames = frames['n_frames']
     img_size = frames[0].shape
 
-    R4grid = getHexGridCenters(img_size, 25) # 25 225 for imagesize (90,360) # 18 200 for imagesize (60,360) 
-    R2grid = getHexGridCenters(img_size, 20) # 20 225 for imagesize (90,360) # 15 150 for imagesize (60,360) 
-    R2RF = (getGridRFs(img_size,R2grid,225)) #250
+    R4grid = getHexGridCenters(img_size, 25) 
+    R2grid = getHexGridCenters(img_size, 20) 
+    R2RF = (getGridRFs(img_size,R2grid,225)) 
     R4RF = (getGridRFs(img_size,R4grid,225))
     n_r2 = len(R2RF.keys())
     n_r4 = len(R4RF.keys())

@@ -1,11 +1,45 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pygenn.genn_model as genn
-import generateRFs
-import process_video
+import generateRFs as generateRFs
+import process_video as process_video
 import os.path
 import pickle
 from scipy.signal import find_peaks
+
+# params = {'EPG_EPG_init': 0.3, 
+#         'EPG_PEN_init': 2, 
+#         'EPG_R_init': 0.1, 
+#         'EPG_D7_init': 0.5, 
+#         'R_EPG_init': -35, 
+#         'PEN_EPG_init': 1.5, 
+#         'D7_EPG_init': -35., 
+#         'R_R_init': -5, 
+#         'Rx_EPG_init': -0.4, 
+#         'wmin': 1., 
+#         'eta': 0.03, 
+#         'rho': 0.06, 
+#         'r_scale': 0.5, 
+#         'I': 0.175, 
+#         'inh_tau': 5.0, 
+#         'exc_tau': 20.0}
+
+params = {'EPG_EPG_init': 0.02, 
+        'EPG_PEN_init': 0.13, 
+        'EPG_R_init': 0.01, 
+        'EPG_D7_init': 0.05, 
+        'R_EPG_init': -1.3,
+        'PEN_EPG_init': 0.14,
+        'D7_EPG_init': -2.6,
+        'R_R_init': -.3, 
+        'Rx_EPG_init': -0.05, 
+        'wmin': .2, 
+        'eta': 0.01, 
+        'rho': 0.06, 
+        'r_scale': 0.35, 
+        'I': 0.13, 
+        'inh_tau': 50.0, 
+        'exc_tau': 100.0}
 
 
 fpath_super =  ['circling/1_circle_super','circling/2_circle_super','circling/3_circle_super','circling/4_circle_super','circling/5_circle_super',
@@ -29,7 +63,8 @@ plot_correlations = False
 plot_figures = True
 
 conv_size = {'static':'0','small':'50','med':'100','large':'150','super':'200'}
-speed = {'0':.13,'50':.074,'100':.074,'150':.074,'200':.074}
+# speed = {'0':0.13,'50':.074,'100':.074,'150':.074,'200':.074}
+speed = {'0':params['I'],'50':.074,'100':.074,'150':.074,'200':.074}
 
 
 n_exp = 1 #20
@@ -42,9 +77,8 @@ bump = {}
 for exp in range(n_exp):
     n_R4, n_R2 = (26,42)
     n_EPG = 16
-    Rx_EPG_init =  -0.05
-    R4toEPG = np.random.rand(n_R4,n_EPG) * Rx_EPG_init
-    R2toEPG = np.random.rand(n_R2,n_EPG) * Rx_EPG_init
+    R4toEPG = np.random.rand(n_R4,n_EPG) * params['Rx_EPG_init']
+    R2toEPG = np.random.rand(n_R2,n_EPG) * params['Rx_EPG_init']
     for sh in range(n_shift):
         print(f'LOOP {exp}:{n_exp}')
         print(f'shift {sh}:{n_shift}')
@@ -71,7 +105,7 @@ for exp in range(n_exp):
             [r4_A,r2_A] = generateRFs.getActivations(frames, shift = shift*sh)
             # print('Completed generating activations')
 
-            r_scale = .35
+            r_scale = params['r_scale']
 
             #---------------------------------------------------------------------------
             # Parameters
@@ -128,41 +162,27 @@ for exp in range(n_exp):
 
             # Synapse parameters
             #--------------------------------------------------------------------------
-            EPG_EPG_init =  0.02
-            EPG_PEN_init =  0.13
-            R_EPG_init =   -1.3
-            EPG_R_init =    0.01
-            PEN_EPG_init =  0.14
-            D7_EPG_init =  -2.6
-            EPG_D7_init =   0.05
-            D7_D7_init =   -0.0
-            R_R_init =     -.3
-            Rx_EPG_init =  -0.05
-            wMin = .2
-
-            eta = 0.01 
-            rho = 0.06
-
-            GABAA_post_syn_params = {"tau": 50.0}
-            NMDA_post_syn_params = {"tau": 100.0}
+            GABAA_post_syn_params = params["inh_tau"]
+            NMDA_post_syn_params = params["exc_tau"]
 
             if learning == 'on':
-                stdp_params = {"tau": 50.0,"rho": rho,"eta": eta,"wMin": -wMin,"wMax": .0, "start": 0, "end": float(tm_in[-1])}
+                stdp_params = {"tau": 50.0,"rho": params["rho"],"eta": params["eta"],"wMin": -params["wmin"],"wMax": .0, "start": 0, "end": float(tm_in[-1])}
             else:
-                stdp_params = {"tau": 50.0,"rho": rho,"eta": eta,"wMin": -wMin,"wMax": .0, "start": 0, "end": float(tm_in[int(n_1rev*2)])}
+                stdp_params = {"tau": 50.0,"rho": params["rho"],"eta": params["eta"],"wMin": -params["wmin"],"wMax": .0, "start": 0, "end": float(tm_in[int(n_1rev*2)])}
 
+            learning = lbl
 
             # Define weights
             #---------------------------------------------------------------------------
-            EPGtoEPG = np.load('data/weights/EPG_EPG_weights.npy') * EPG_EPG_init
-            EPGtoPEN = np.load('data/weights/EPG_PEN_weights.npy') * EPG_PEN_init
-            PENtoEPG = np.load('data/weights/PEN_EPG_weights.npy') * PEN_EPG_init
-            RtoEPG = np.load('data/weights/R_EPG_weights.npy') * R_EPG_init
-            EPGtoR = np.load('data/weights/EPG_R_weights.npy') * EPG_R_init
-            D7toEPG = np.load('data/weights/D7_EPG_weights.npy') * D7_EPG_init
-            EPGtoD7 = np.load('data/weights/EPG_D7_weights.npy') * EPG_D7_init
-            R2toR2 = np.load(f'data/weights/R2_weights.npy') * R_R_init
-            R4toR4 = np.load(f'data/weights/R4_weights.npy') * R_R_init
+            EPGtoEPG = np.load('data/weights/EPG_EPG_weights.npy') * params["EPG_EPG_init"]
+            EPGtoPEN = np.load('data/weights/EPG_PEN_weights.npy') * params["EPG_PEN_init"]
+            PENtoEPG = np.load('data/weights/PEN_EPG_weights.npy') * params["PEN_EPG_init"]
+            RtoEPG = np.load('data/weights/R_EPG_weights.npy') * params["R_EPG_init"]
+            EPGtoR = np.load('data/weights/EPG_R_weights.npy') * params["EPG_R_init"]
+            D7toEPG = np.load('data/weights/D7_EPG_weights.npy') * params["D7_EPG_init"]
+            EPGtoD7 = np.load('data/weights/EPG_D7_weights.npy') * params["EPG_D7_init"]
+            R2toR2 = np.load(f'data/weights/R2_weights.npy') * params["R_R_init"]
+            R4toR4 = np.load(f'data/weights/R4_weights.npy') * params["R_R_init"]
 
             # Weight update model
             #---------------------------------------------------------------------------
@@ -325,12 +345,6 @@ for exp in range(n_exp):
             model.build()
             model.load(num_recording_timesteps=sim_len)
 
-            v_EPG = np.empty((sim_len, n_EPG))
-            v_PEN = np.empty((sim_len, n_PEN))
-            v_D7 = np.empty((sim_len, n_D7))
-            view_EPG = EPG.vars["V"].view
-            view_PEN = PEN.vars["V"].view
-            view_D7 = D7.vars["V"].view
 
             R4_EPG_g = np.zeros((3, n_R4, n_EPG))
             R2_EPG_g = np.zeros((3, n_R2, n_EPG))
@@ -357,13 +371,7 @@ for exp in range(n_exp):
                     tmp = tmp + 1
 
                 model.step_time()
-                EPG.pull_var_from_device("V")
-                PEN.pull_var_from_device("V")
-                D7.pull_var_from_device("V")
-                v_EPG[model.timestep - 1,:]=view_EPG[:]
-                v_PEN[model.timestep - 1,:]=view_PEN[:]
-                v_D7[model.timestep - 1,:]=view_D7[:]
-
+ 
             #---------------------------------------------------------------------------
             # Retrieve spiking data
             #---------------------------------------------------------------------------
@@ -393,42 +401,25 @@ for exp in range(n_exp):
             # Plot spike trains
             #---------------------------------------------------------------------------
 
+
             # FIND MOST ACTIVE CELL
-            bin_sz = t_single_frame #20 #ms
+            bin_sz = t_single_frame
             med_tms = np.arange(0,sim_len,bin_sz)
             med_cell = np.zeros(len(med_tms))
             med_cell[:] = np.nan
-            binned = (EPG_spike_times//bin_sz)*bin_sz
-            binnedr2 = (R2_spike_times//bin_sz)*bin_sz
-            binnedr4 = (R4_spike_times//bin_sz)*bin_sz
+            binned = (EPG_spike_times//bin_sz).astype(int)
 
             id_unwrapped = np.unwrap(EPG_spike_ids, period = 16)
             gt_tms = np.arange(init,sim_len,bin_sz)
             gt = np.append(np.zeros(len(med_tms)-len(gt_tms)), np.arange(0,len(gt_tms)) * ((n_EPG*3)/len(gt_tms)))
             angle = (((gt%n_EPG)*22.5)//22.5).astype(int)
 
-            n_angles = int(360//22.5)
-            EPG_mat = np.zeros((n_EPG,n_angles))
-            R2_mat = np.zeros((n_R2,n_angles))
-            R4_mat = np.zeros((n_R4,n_angles))
             for i,tm in enumerate(med_tms):
-                a = angle[i]
-                cells = id_unwrapped[binned == tm]
+                cells = id_unwrapped[binned == i]
                 if len(cells):
                     med_cell[i] = np.median(cells)
-                if tm > init:
-                    EPG_active = EPG_spike_ids[binned == tm]
-                    for c in EPG_active:
-                        EPG_mat[c,a] = EPG_mat[c,a] + 1
-                    R2_active = np.unique(R2_spike_ids[binnedr2 == tm])  
-                    for c in R2_active:
-                        R2_mat[c,a] = R2_mat[c,a] + 1
-                    R4_active = np.unique(R4_spike_ids[binnedr4 == tm])
-                    for c in R4_active:
-                        R4_mat[c,a] = R4_mat[c,a] + 1
             med_cell = med_cell-med_cell[0]
 
-            
             test_RMSE = np.sqrt(np.nanmean(np.square(np.subtract(gt[(n_1rev*2):],med_cell[(n_1rev*2):]))))
             if np.isnan(np.subtract(gt[(n_1rev*2):],med_cell[(n_1rev*2):])).sum() > 500:
                 test_RMSE = np.nan
@@ -455,12 +446,13 @@ for exp in range(n_exp):
                 fig.colorbar(im1, ax=ax1)
                 fig.colorbar(im2, ax=ax2)
                 # fig.colorbar(im3, ax=axes[2])
-                plt.savefig(f'results/{fpath}_activations', bbox_inches='tight')
+                plt.savefig(f'results/{fpath}_activations.png', bbox_inches='tight')
+                plt.savefig(f'results/{fpath}_activations.svg', bbox_inches='tight')
                 plt.close(fig)
 
                 # PAPER FIGURE B
                 fig = plt.figure(figsize=(11, 4))
-                fig.suptitle(f'{fname} eta:{eta} rho:{rho} error:{np.around(test_RMSE,4)} learning:{learning}')
+                fig.suptitle(f'{fname} error:{np.around(test_RMSE,4)} learning:{learning}')
                 gs = fig.add_gridspec(6,18)
                 ax1 = fig.add_subplot(gs[:2, :10])
                 ax2 = fig.add_subplot(gs[2:4, :10])
@@ -476,7 +468,7 @@ for exp in range(n_exp):
                 ax1.scatter(R2_spike_times, R2_spike_ids , s=1, label=f'R2 spikes', c = 'Gold')
                 ax1.scatter(R4_spike_times, R4_spike_ids + n_R2, s=1, label=f'R4 spikes', c = 'Orange')
                 ax6.plot(med_tms,gt*22.5, c = 'Black', label='Ground Truth')
-                ax6.plot(med_tms,abs((med_cell*22.5)), label='estimate', alpha = .7)
+                ax6.scatter(med_tms,(med_cell*22.5), label='estimate', alpha = .7,s=1)
                 # Label axes
                 ax1.set_ylabel("Ring Neuron")
                 ax2.set_ylabel("EPG neuron")
@@ -497,14 +489,14 @@ for exp in range(n_exp):
                 ax2.set_ylim([0,n_EPG])
                 ax6.set_ylim([0,1080])
 
-                ax3.imshow(np.vstack([R2_EPG_g[0,:],R4_EPG_g[0,:]]), vmin=-wMin, vmax=0.01,aspect='auto',)
+                ax3.imshow(np.vstack([R2_EPG_g[0,:],R4_EPG_g[0,:]]), vmin=-params["wMin"], vmax=0.01,aspect='auto',)
                 ax3.set_ylabel("Ring neurons")
                 ax3.set_xlabel("EPG")
                 ax3.set_title('Initial')
-                ax4.imshow(np.vstack([R2_EPG_g[1,:],R4_EPG_g[1,:]]), vmin=-wMin, vmax=0.01,aspect='auto',)
+                ax4.imshow(np.vstack([R2_EPG_g[1,:],R4_EPG_g[1,:]]), vmin=-params["wMin"], vmax=0.01,aspect='auto',)
                 ax4.set_xlabel("EPG")
                 ax4.set_title('1 rev')            
-                img = ax5.imshow(np.vstack([R2_EPG_g[2,:],R4_EPG_g[2,:]]), vmin=-wMin, vmax=0.01, aspect='auto',)
+                img = ax5.imshow(np.vstack([R2_EPG_g[2,:],R4_EPG_g[2,:]]), vmin=-params["wMin"], vmax=0.01, aspect='auto',)
                 ax5.set_xlabel("EPG")
                 ax5.set_title('2 rev')
                 # fig.colorbar(img, ax=ax5, ticks = [0,-.2])
@@ -516,6 +508,7 @@ for exp in range(n_exp):
                 ax5.set_xticks([0,15])
 
                 plt.savefig(f'results/{fpath}_{learning}.png', bbox_inches='tight')
+                plt.savefig(f'results/{fpath}_{learning}.svg', bbox_inches='tight')
                 plt.close(fig)
 
 
@@ -537,7 +530,8 @@ for exp in range(n_exp):
                 ax.set_ylabel('Angle (deg)')
                 ax.set_xlabel('Angle (deg)')
                 plt.colorbar(im, ax = ax)
-                plt.savefig(f'results/{fpath}_R_autocorrelation', bbox_inches='tight')
+                plt.savefig(f'results/{fpath}_R_autocorrelation.png', bbox_inches='tight')
+                plt.savefig(f'results/{fpath}_R_autocorrelation.svg', bbox_inches='tight')
                 plt.close(fig)
 
 
@@ -553,7 +547,8 @@ for exp in range(n_exp):
                 ax.set_ylabel('Angle (deg)')
                 ax.set_xlabel('Angle (deg)')
                 plt.colorbar(im, ax = ax)
-                plt.savefig(f'results/{fpath}_vid_autocorrelation', bbox_inches='tight')
+                plt.savefig(f'results/{fpath}_vid_autocorrelation.png', bbox_inches='tight')
+                plt.savefig(f'results/{fpath}_vid_autocorrelation.svg', bbox_inches='tight')
                 plt.close(fig)
 
                 correllations[count,0] = np.mean(a_cor)

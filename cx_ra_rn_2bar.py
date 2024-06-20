@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import pygenn.genn_model as genn
 from PIL import Image
 import scipy.stats as stats
-import generateRFs
-import process_video
+import generateRFs as generateRFs
+import process_video as process_video
 import os.path
 import pickle
 import re
@@ -84,7 +84,6 @@ EPG_R_init =    0.01
 PEN_EPG_init =  0.14
 D7_EPG_init =  -2.6
 EPG_D7_init =   0.05
-D7_D7_init =   -0.0
 R_R_init =     -.3
 Rx_EPG_init =  -0.05
 wMin = .2

@@ -5,6 +5,7 @@ import os.path
 import cv2
 from PIL import Image
 import math
+import seaborn as sns
 
 def remove_padding(img):
     h,w = img.shape
@@ -106,38 +107,91 @@ def video_autocorrelation (frames):
     return corMat
 
 # PLOT ALL PANORAMAS
-def plot_panoramas (f_names,f_num):
+def plot_panoramas (f_names,f_num, var = {}):
     col = 3
+    colours = ['green','blue','red']
+    colours = sns.color_palette("tab10", 3)
+    label = ['Low','High','Fail']
     fig, axes = plt.subplots(len(f_names)//col,col, figsize=(10,15))
+    sns.set_style('white')
     for count,fname in enumerate(f_names):
-        
+        n = fname.split('/')[-1]
+        n = n.replace('_static','')
+        n = n.replace('_super','')
         if os.path.isfile(f'{fname}.pkl'):
             with open(f'{fname}.pkl', 'rb') as fp:
                 frames = pickle.load(fp)
-
+            
             axes[count//col,count%col].imshow(frames[f_num[count]], aspect='auto', cmap = 'gray')
+        if n in var.keys():
+            c = colours[var[n]]
+            # axes[count//col,count%col].spines['bottom'].set_color(c)
+            # axes[count//col,count%col].spines['top'].set_color(c) 
+            # axes[count//col,count%col].spines['right'].set_color(c)
+            axes[count//col,count%col].spines['left'].set_color(c)
+            axes[count//col,count%col].spines['left'].set_linewidth(3)
+            axes[count//col,count%col].set_ylabel(label[var[n]])
+        else:
+            axes[count//col,count%col].axis('off')
         axes[count//col,count%col].set_xticks([])
         axes[count//col,count%col].set_yticks([])
-    plt.savefig(f'results/allPanoramas', bbox_inches='tight')
+    plt.savefig(f'results/allPanoramas.png', bbox_inches='tight')
+    plt.savefig(f'results/allPanoramas.svg', bbox_inches='tight')
     plt.show()
 
 
-# all = ['data/rotation/12_3rev_static','data/rotation/19_3rev_static', 'data/rotation/17_3rev_static',
-#             'data/rotation/25_3rev_static', 'data/rotation/24_3rev_static', 'data/rotation/23_3rev_static',
+all = ['data/rotation/12_3rev_static','data/rotation/19_3rev_static', 'data/rotation/17_3rev_static',
+            'data/rotation/25_3rev_static', 'data/rotation/24_3rev_static', 'data/rotation/23_3rev_static',
 
-#            'data/rotation/1_3rev_static','data/rotation/2_3rev_static','data/rotation/4_3rev_static',
-#            'data/rotation/5_3rev_static','data/rotation/6_3rev_static','data/rotation/7_3rev_static',
-#            'data/rotation/9_3rev_static','data/rotation/10_3rev_static','data/rotation/21_3rev_static',
-#            'data/rotation/11_3rev_static','data/rotation/13_3rev_static','data/rotation/14_3rev_static',
-#            'data/rotation/15_3rev_static','data/rotation/20_3rev_static','data/rotation/18_3rev_static',
-#            'data/rotation/22_3rev_static','data/rotation/16_3rev_static','',
-#            '','','',
-#            'data/circling/1_circle_super','','',
-#            'data/circling/2_circle_super','','',
-#            'data/circling/3_circle_super','','',
-#            'data/circling/4_circle_super','','',
-#            'data/circling/5_circle_super','data/circling/6_circle_super','data/circling/7_circle_super',
-#            'data/circling/8_circle_super','data/circling/9_circle_super','data/circling/10_circle_super'
-#            ]
-# f_num = [0,60,0,140,0,170,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-# plot_panoramas(all,f_num)
+           'data/rotation/1_3rev_static','data/rotation/2_3rev_static','data/rotation/4_3rev_static',
+           'data/rotation/5_3rev_static','data/rotation/6_3rev_static','data/rotation/7_3rev_static',
+           'data/rotation/9_3rev_static','data/rotation/10_3rev_static','data/rotation/21_3rev_static',
+           'data/rotation/11_3rev_static','data/rotation/13_3rev_static','data/rotation/14_3rev_static',
+           'data/rotation/15_3rev_static','data/rotation/20_3rev_static','data/rotation/18_3rev_static',
+           'data/rotation/22_3rev_static','data/rotation/16_3rev_static','',
+           '','','',
+           'data/circling/1_circle_super','','',
+           'data/circling/2_circle_super','','',
+           'data/circling/3_circle_super','','',
+           'data/circling/4_circle_super','','',
+           'data/circling/5_circle_super','data/circling/6_circle_super','data/circling/7_circle_super',
+           'data/circling/8_circle_super','data/circling/9_circle_super','data/circling/10_circle_super'
+           ]
+f_num = [0,60,0,140,0,170,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+
+var = { '1_3rev' : 0,
+        '2_3rev' : 2,
+        '4_3rev' : 1,
+        '5_3rev' : 0,
+        '6_3rev' : 0,
+        '7_3rev' : 1,
+        '9_3rev' : 1,
+        '10_3rev' : 0,
+        '11_3rev' : 0,
+        '12_3rev' : 1,
+        '13_3rev' : 1,
+        '14_3rev' : 1,
+        '15_3rev' : 0,
+        '16_3rev' : 0,
+        '17_3rev' : 1,
+        '18_3rev' : 0,
+        '19_3rev' : 0,
+        '20_3rev' : 0,
+        '21_3rev' : 0,
+        '22_3rev' : 1,
+        '23_3rev' : 1,
+        '24_3rev' : 0,
+        '25_3rev' : 2,
+        '1_circle' : 2,
+        '2_circle' : 1,
+        '3_circle' : 0,
+        '4_circle' : 2,
+        '5_circle' : 0,
+        '6_circle' : 2,
+        '7_circle' : 2,
+        '8_circle' : 0,
+        '9_circle' : 1,
+        '10_circle' : 0}
+
+# plot_panoramas(all,f_num, var = var)
+

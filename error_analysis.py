@@ -59,6 +59,7 @@ nans = np.zeros(RMSE.shape)
 nans[np.isnan(RMSE)] = 1
 # RMSE[np.isnan(RMSE)] = 60
 Av = np.nanmean(RMSE, axis = 0)
+print(Av)
 res = stats.bootstrap([RMSE], np.nanstd, confidence_level=0.95,random_state=rng)
 SE = res.standard_error
 
@@ -90,6 +91,7 @@ for i in range(len(Av)):
     mxfail = np.max([mxfail,nfails[i]])
     if nfails[i]>0:
         fail_group[i] = 1
+    print(nfails)
 axes.set_ylabel('# failed simulations')
 axes.set_ylim([0,mxfail+1])
 axes.set_xticks(ticks,np.append(np.arange(rotate_n)+1,np.arange(circle_n)+1))
@@ -188,5 +190,48 @@ SE_lim = .15
 label = np.ones(SE.shape)
 label[SE<SE_lim] = 0
 label[nfails>3.2] = 2
-print(label)
 plot_comp_3(label,comb,features,'SE')
+print(label)
+
+
+
+
+
+def plot_comp_rot_circ(label,Av):
+    fig = plt.figure( figsize=(12,2.5))
+    plt.tight_layout()
+
+    success = Av[label == 0]
+    #print(success)
+    Poor = Av[label == 1]
+    SD = np.std(success)
+    successSE = SD/len(success)
+    res_s = stats.bootstrap([success], np.std, confidence_level=0.95,random_state=rng)
+    res_f = stats.bootstrap([Poor], np.std, confidence_level=0.95,random_state=rng)
+    SD = np.std(Poor)
+    PoorSE = SD/len(Poor)
+    SE = [successSE,PoorSE]
+    SE = [res_s.standard_error,res_f.standard_error]
+
+    successAv = [np.mean(success),np.mean(Poor)]
+
+    tt = stats.ttest_ind(success, Poor, equal_var=False)
+    #print(f'{features[n]} ttest: {tt}')
+
+    plt.suptitle(f'p = {np.around(tt[1],decimals=5)}',fontsize=10)
+    plt.scatter(np.zeros(len(success)),success, alpha = .1)
+    plt.scatter(np.ones(len(Poor)),Poor, alpha = .1)
+    plt.scatter(range(2),successAv, c='black')
+    plt.errorbar(range(2),successAv, yerr=SE,ls = '', c='black',capsize=7)
+    plt.ylabel(RMSE)
+    plt.xticks([0,1],['Low','High'])
+    plt.xlabel('Variance')
+    plt.xlim([-1,2])
+    plt.savefig(f'results/comparision/rot_circ.png', bbox_inches='tight')
+    plt.show()
+
+
+label = np.ones(SE.shape)
+label[:rotate_n] = 0
+plot_comp_rot_circ(label,Av)
+print(label)
