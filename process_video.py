@@ -107,7 +107,7 @@ def video_autocorrelation (frames):
     return corMat
 
 # PLOT ALL PANORAMAS
-def plot_panoramas (f_names,f_num, var = {}):
+def plot_panoramas (f_names,f_num, var = {}, d = {}):
     col = 3
     colours = ['green','blue','red']
     colours = sns.color_palette("tab10", 3)
@@ -130,7 +130,7 @@ def plot_panoramas (f_names,f_num, var = {}):
             # axes[count//col,count%col].spines['right'].set_color(c)
             axes[count//col,count%col].spines['left'].set_color(c)
             axes[count//col,count%col].spines['left'].set_linewidth(3)
-            axes[count//col,count%col].set_ylabel(label[var[n]])
+            axes[count//col,count%col].set_ylabel(f'{label[var[n]]} {d[n]}m' )
         else:
             axes[count//col,count%col].axis('off')
         axes[count//col,count%col].set_xticks([])
@@ -193,5 +193,39 @@ var = { '1_3rev' : 0,
         '9_circle' : 1,
         '10_circle' : 0}
 
-# plot_panoramas(all,f_num, var = var)
+d = { '1_3rev' : 5,
+        '2_3rev' : 2,
+        '4_3rev' : 2,
+        '5_3rev' : 5,
+        '6_3rev' : 5,
+        '7_3rev' : 10,
+        '9_3rev' : 6,
+        '10_3rev' : 12,
+        '11_3rev' : 10,
+        '12_3rev' : 30,
+        '13_3rev' : 3,
+        '14_3rev' : 4,
+        '15_3rev' : 1,
+        '16_3rev' : 8,
+        '17_3rev' : 20,
+        '18_3rev' : 6,
+        '19_3rev' : 50,
+        '20_3rev' : 6,
+        '21_3rev' : 3,
+        '22_3rev' : 10,
+        '23_3rev' : 20,
+        '24_3rev' : 50,
+        '25_3rev' : 30,
+        '1_circle' : 5,
+        '2_circle' : 50,
+        '3_circle' : 0.1,
+        '4_circle' : 0.5,
+        '5_circle' : 0.2,
+        '6_circle' : 0.2,
+        '7_circle' : 0.2,
+        '8_circle' : 3,
+        '9_circle' : 5,
+        '10_circle' : 3}
+
+# plot_panoramas(all,f_num, var = var, d = d)
 
